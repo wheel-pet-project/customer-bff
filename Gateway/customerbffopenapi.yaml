@@ -1,0 +1,1354 @@
+openapi: 3.0.0
+info:
+  title: Customer BFF
+  version: 1.0.0
+tags:
+  - name: identity
+    description: аутентификация, авторизация, создание и восстановление аккаунта клиента
+  - name: model
+    description: модели доступные для аренды
+  - name: driving-license
+    description: Загрузка водительского удостоверения
+  - name: vehicle
+    description: автомобили доступные для аренды
+  - name: booking
+    description: бронирование автомобилей
+  - name: vehicle-check
+    description: проверка автомобиля клиентом перед арендой
+  - name: rent
+    description: аренда автомобилей
+paths:
+  /rent/start:
+    post:
+      tags:
+        - rent
+      summary: Начать аренду
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartRentRequest'
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartRentResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /rent/{rentId}/complete:
+    post:
+      tags:
+        - rent
+      summary: Завершить аренду
+      parameters:
+        - in: query
+          name: rentId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Идентификатор аренды
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompleteRentResponse'
+        '404':
+          description: Аренда с таким идентификатором не существует
+        '500':
+          description: Внутренняя ошибка сервера
+  /rent/{rentId}/get-current-amount:
+    get:
+      tags:
+        - rent
+      summary: Получить все текущие аренды
+      parameters:
+        - in: query
+          name: rentId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Идентификатор аренды
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCurrentAmountRentResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /driving-license/{licenseId}:
+    get:
+      tags:
+        - driving-license
+      summary: Получение водительского удостоверения по идентификатору
+      parameters:
+        - in: query
+          name: licenseId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Идентификатор водительского удостоверения
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetLicenseByIdResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /driving-license/{licenseId}/upload-license:
+    post:
+      tags:
+        - driving-license
+      summary: Загрузка водительского удостоверения
+      parameters:
+        - in: query
+          name: rentId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Идентификатор водительского удостоверения
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadLicenseRequest'
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadLicenseResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /driving-license/{licenseId}/upload-photos:
+    post:
+      tags:
+        - driving-license
+      summary: Загрузка фотографий водительского удостоверения
+      parameters:
+        - in: query
+          name: licenseId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Идентификатор аренды
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadPhotosRequest'
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+  /booking/book-vehicle:
+    post:
+      tags:
+        - booking
+      summary: Book a vehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookVehicleRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookVehicleResponse'
+        '500':
+          description: Internal server error
+  /booking/{bookingId}/cancel-booking:
+    post:
+      tags:
+        - booking
+      summary: Cancel a booking
+      parameters:
+        - in: query
+          name: bookingId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Идентификатор бронирования
+      responses:
+        '200':
+          description: Successful operation
+        '500':
+          description: Internal server error
+  /identity/authenticate:
+    post:
+      tags:
+        - identity
+      summary: Аутентификация аккаунта
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticateRequest'
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+        '404':
+          description: Аккаунт с таким идентификатором не найден
+  /identity/account/create:
+    post:
+      tags:
+        - identity
+      summary: Создание аккаунта
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRequest'
+      responses:
+        '201':
+          description: Аккаунт успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /identity/{accountId}/confirm-email:
+    post:
+      tags:
+        - identity
+      summary: Подтверждение email аккаунта
+      parameters:
+        - name: accountId
+          in: path
+          description: Идентификатор аккаунта
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmEmailRequest'
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+        '404':
+          description: Токен подтверждения не найден
+  /identity/refresh-access-token:
+    post:
+      tags:
+        - identity
+      summary: Обновление токена доступа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshAccessTokenRequest'
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshAccessTokenResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+        '404':
+          description: Refresh token с таким идентификатором не найден
+  /identity/account/{accountId}/recover-password:
+    post:
+      tags:
+        - identity
+      summary: Восстановление пароля
+      parameters:
+        - name: accountId
+          in: path
+          description: Идентификатор аккаунта
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoverPasswordRequest'
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+        '404':
+          description: Аккаунт с таким идентификатором не найден
+  /identity/account/{accountId}/update-password:
+    post:
+      tags:
+        - identity
+      summary: Обновление пароля
+      parameters:
+        - name: accountId
+          in: path
+          description: Идентификатор аккаунта
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePasswordRequest'
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+        '404':
+          description: Аккаунт с таким идентификатором не найден
+  /model/{page}/{pageSize}:
+    get:
+      tags:
+        - model
+      summary: Получение всех моделей автомобилей
+      parameters:
+        - name: page
+          in: path
+          description: Номер страницы
+          schema:
+            type: integer
+        - name: pageSize
+          in: path
+          description: Количество элементов на странице
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAllModelsResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /model/add:
+    post:
+      tags:
+        - model
+      summary: Добавление новой модели автомобиля
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddModelRequest'
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddModelResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /model/{modelId}/category:
+    put:
+      tags:
+        - model
+      summary: Обновление категории модели автомобиля
+      parameters:
+        - name: modelId
+          in: path
+          description: Идентификатор модели автомобиля
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateModelCategoryRequest'
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+  /model/{modelId}/tariff:
+    put:
+      tags:
+        - model
+      summary: Обновление тарифа модели автомобиля
+      parameters:
+        - name: modelId
+          in: path
+          description: Идентификатор модели автомобиля
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateModelTariffRequest'
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+  /model/{modelId}:
+    get:
+      tags:
+        - model
+      summary: Получение модели автомобиля по идентификатору
+      parameters:
+        - name: modelId
+          in: path
+          description: Идентификатор модели автомобиля
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetModelByIdResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehicle/{page}/{pageSize}:
+    get:
+      tags:
+        - vehicle
+      summary: Получение всех автомобилей
+      parameters:
+        - name: status
+          in: query
+          required: true
+          description: Статус автомобилей
+          schema:
+            $ref: '#/components/schemas/Status'
+        - name: page
+          in: path
+          description: Номер страницы
+          schema:
+            type: integer
+        - name: pageSize
+          in: path
+          description: Количество элементов на странице
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAllVehiclesResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehicle:
+    post:
+      tags:
+        - vehicle
+      summary: Добавление нового автомобиля
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddVehicleRequest'
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddVehicleResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehicle/{vehicleId}/ready:
+    post:
+      tags:
+        - vehicle
+      summary: Отметить автомобиль как готовый к выпуску
+      parameters:
+        - name: vehicleId
+          in: path
+          description: Идентификатор автомобиля
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehicle/{vehicleId}/release:
+    post:
+      tags:
+        - vehicle
+      summary: Выпуск автомобиля
+      parameters:
+        - name: vehicleId
+          in: path
+          description: Идентификатор автомобиля
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehicle/{vehicleId}/service:
+    post:
+      tags:
+        - vehicle
+      summary: Отправка автомобиля на сервис
+      parameters:
+        - name: vehicleId
+          in: path
+          description: Идентификатор автомобиля
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehicle/{vehicleId}:
+    get:
+      tags:
+        - vehicle
+      summary: Получение автомобиля по идентификатору
+      parameters:
+        - name: vehicleId
+          in: path
+          description: Идентификатор автомобиля
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetVehicleByIdResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+    delete:
+      tags:
+        - vehicle
+      summary: Удаление автомобиля
+      parameters:
+        - name: vehicleId
+          in: path
+          description: Идентификатор автомобиля
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehicle/get-in-square:
+    get:
+      tags:
+        - vehicle
+      summary: Получение автомобилей в заданном квадрате
+      parameters:
+        - name: status
+          in: query
+          description: Статус для фильтрации автомобилей
+          required: true
+          schema:
+            $ref: '#/components/schemas/Status'
+        - name: upper-left-location
+          in: query
+          description: Верхняя левая координата квадрата
+          required: true
+          schema:
+            $ref: '#/components/schemas/Location'
+        - name: lower-right-location
+          in: query
+          description: Нижняя правая координата квадрата
+          required: true
+          schema:
+            $ref: '#/components/schemas/Location'
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetVehiclesInSquareResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehiclecheck/start-check:
+    post:
+      tags:
+        - vehicle-check
+      summary: Начало проверки автомобиля
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartCheckRequest'
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartCheckResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehiclecheck/{checkId}/add-damage-fixations:
+    post:
+      tags:
+        - vehicle-check
+      summary: Добавление отметок повреждений
+      parameters:
+        - in: query
+          name: checkId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Идентификатор проверки
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddDamageFixationsRequest'
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehiclecheck/{checkId}/complete-check:
+    post:
+      tags:
+        - vehicle-check
+      summary: Завершение проверки автомобиля
+      parameters:
+        - in: query
+          name: checkId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Идентификатор проверки
+      responses:
+        '200':
+          description: Успешная операция
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehiclecheck/{checkId}:
+    get:
+      tags:
+        - vehicle-check
+      summary: Получение информации о проверке автомобиля по идентификатору
+      parameters:
+        - name: checkId
+          in: path
+          description: Идентификатор проверки
+          required: true
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCheckByIdResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+  /vehiclecheck/get-all-checks-for-considerate-review/{page}/{pageSize}:
+    get:
+      tags:
+        - vehicle-check
+      summary: Получение всех проверок автомобилей для рассмотрения
+      parameters:
+        - name: page
+          in: path
+          description: Страница
+          required: true
+        - name: pageSize
+          in: path
+          description: Размер страницы
+          required: true
+      responses:
+        '200':
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAllChecksForConsiderateReviewResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+components:
+  schemas:
+    AuthenticateRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          example: "example@example.com"
+        password:
+          type: string
+          example: "password"
+    AuthenticateResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        refreshToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    CreateRequest:
+      type: object
+      required:
+        - role
+        - email
+        - phone
+        - password
+      properties:
+        email:
+          type: string
+          example: "example@example.com"
+        phone:
+          type: string
+          example: "+79005008010"
+        password:
+          type: string
+          example: "password"
+    CreateResponse:
+      type: object
+      required:
+        - accountId
+      properties:
+        accountId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+    ConfirmEmailRequest:
+      type: object
+      required:
+        - confirmationToken
+      properties:
+        confirmationToken:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+    RefreshAccessTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    RefreshAccessTokenResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        refreshToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    RecoverPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          example: "example@example.com"
+    UpdatePasswordRequest:
+      type: object
+      required:
+        - newPassword
+        - email
+        - resetToken
+      properties:
+        newPassword:
+          type: string
+          example: "new-password"
+        email:
+          type: string
+          example: "example@example.com"
+        resetToken:
+          type: string
+          example: "123e4567-e89b-12d3-a456-426614174000"
+    AddModelRequest:
+      type: object
+      required:
+        - brand
+        - carModelId
+        - category
+        - pricePerMinute
+        - pricePerHour
+        - price_per_day
+      properties:
+        brand:
+          type: string
+        carModel:
+          type: string
+        category:
+          type: string
+        pricePerMinute:
+          type: number
+        pricePerHour:
+          type: number
+        price_per_day:
+          type: number
+    AddModelResponse:
+      type: object
+      required:
+        - model_id
+      properties:
+        model_id:
+          type: string
+    UpdateModelCategoryRequest:
+      type: object
+      required:
+        - category
+      properties:
+        category:
+          type: string
+          example: "B"
+    UpdateModelTariffRequest:
+      type: object
+      required:
+        - pricePerMinute
+        - pricePerHour
+        - price_per_day
+      properties:
+        pricePerMinute:
+          type: number
+        pricePerHour:
+          type: number
+        price_per_day:
+          type: number
+    GetAllModelsResponse:
+      type: object
+      properties:
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelShortView'
+    ModelShortView:
+      type: object
+      properties:
+        model_id:
+          type: string
+        brand:
+          type: string
+        carModelId:
+          type: string
+    GetModelByIdResponse:
+      type: object
+      properties:
+        model_id:
+          type: string
+        brand:
+          type: string
+        carModelId:
+          type: string
+        category:
+          type: string
+        pricePerMinute:
+          type: number
+        pricePerHour:
+          type: number
+        price_per_day:
+          type: number
+    AddVehicleRequest:
+      type: object
+      required:
+        - model_id
+        - plate_number
+        - color
+        - vin
+      properties:
+        model_id:
+          type: string
+        plate_number:
+          type: string
+        color:
+          $ref: '#/components/schemas/Color'
+        vin:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+    AddVehicleResponse:
+      type: object
+      required:
+        - vehicleId
+      properties:
+        vehicleId:
+          type: string
+    MarkAsReadiedForReleaseVehicleResponse:
+      type: object
+    ReleaseVehicleResponse:
+      type: object
+    SendToServiceVehicleResponse:
+      type: object
+    DeleteVehicleResponse:
+      type: object
+    GetAllVehiclesResponse:
+      type: object
+      properties:
+        vehicles:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehicleShortView'
+    VehicleShortView:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+        brand:
+          type: string
+        carModelId:
+          type: string
+        color:
+          $ref: '#/components/schemas/Color'
+        location:
+          $ref: '#/components/schemas/Location'
+    GetVehicleByIdResponse:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        brand:
+          type: string
+        carModelId:
+          type: string
+        color:
+          $ref: '#/components/schemas/Color'
+        plate_number:
+          type: string
+        fuelLevelPercents:
+          type: integer
+        location:
+          $ref: '#/components/schemas/Location'
+        pricePerMinute:
+          type: number
+        pricePerHour:
+          type: number
+        pricePerDay:
+            type: number
+    GetVehiclesInSquareResponse:
+      type: object
+      properties:
+        vehicles:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehicleInSquareShortView'
+    VehicleInSquareShortView:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        brand:
+          type: string
+        carModelId:
+          type: string
+        color:
+          $ref: '#/components/schemas/Color'
+        location:
+          $ref: '#/components/schemas/Location'
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+    Color:
+      type: string
+      enum:
+        - white
+        - grey
+        - black
+        - blue
+        - red
+        - yellow
+        - orange
+        - green
+        - beige
+    Status:
+      type: string
+      enum:
+        - released
+        - added
+        - readiedForRelease
+        - occupied
+        - serviced
+        - deleted
+    StartCheckRequest:
+      type: object
+      required:
+        - bookingId
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+    StartCheckResponse:
+      type: object
+      required:
+        - checkId
+      properties:
+        checkId:
+          type: string
+          format: uuid
+    AddDamageFixationsRequest:
+      type: object
+      required:
+        - fixations
+      properties:
+        fixations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Fixation'
+    Fixation:
+      type: object
+      required:
+        - photoBytes
+        - category
+      properties:
+        photoBytes:
+          type: string
+          format: byte
+        category:
+          $ref: '#/components/schemas/FixationCategory'
+        description:
+          type: string
+    FixationCategory:
+      type: string
+      enum:
+        - minorDamage
+        - significantDamage
+    GetCheckByIdResponse:
+      type: object
+      required:
+        - checkId
+        - bookingId
+        - vehicleId
+        - start
+      properties:
+        checkId:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        fixations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Fixation'
+    GetAllChecksForConsiderateReviewResponse:
+      type: object
+      properties:
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Check'
+    Check:
+      type: object
+      required:
+        - checkId
+        - bookingId
+        - vehicleId
+        - start
+      properties:
+        checkId:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time 
+    BookVehicleRequest:
+      type: object
+      required:
+        - vehicleId
+        - customerId
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+    BookVehicleResponse:
+      type: object
+      required:
+        - bookingId
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+    GetLicenseByIdResponse:
+      type: object
+      required:
+        - id
+        - accountId
+        - status
+        - categories
+        - number
+        - name
+        - cityOfBirth
+        - dateOfBirth
+        - codeOfIssue
+        - dateOfIssue
+        - dateOfExpiry
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/DrivingLicenseStatus'
+        categories:
+          type: array
+          items:
+            type: string
+            example: "B"
+        number:
+          type: string
+        name:
+          type: string
+        cityOfBirth:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        codeOfIssue:
+          type: string
+        dateOfIssue:
+          type: string
+          format: date
+        dateOfExpiry:
+          type: string
+          format: date
+        frontPhotoS3Url:
+          type: string
+        backPhotoS3Url:
+          type: string
+    UploadLicenseRequest:
+      type: object
+      required:
+        - accountId
+        - categories
+        - number
+        - firstName
+        - lastName
+        - cityOfBirth
+        - dateOfBirth
+        - codeOfIssue
+        - dateOfIssue
+        - dateOfExpiry
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        categories:
+          type: array
+          items:
+            type: string
+            example: "B"
+        number:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        patronymic:
+          type: string
+        cityOfBirth:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        codeOfIssue:
+          type: string
+        dateOfIssue:
+          type: string
+          format: date
+        dateOfExpiry:
+          type: string
+          format: date
+    UploadLicenseResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+    UploadPhotosRequest:
+      type: object
+      required:
+        - frontPhotoBytes
+        - backPhotoBytes
+      properties:
+        frontPhotoBytes:
+          type: string
+          format: byte
+        backPhotoBytes:
+          type: string
+          format: byte
+    UploadPhotosResponse:
+      type: object
+    DrivingLicenseStatus:
+      type: string
+      enum:
+        - approved
+        - pendingPhotosAdding
+        - pendingProcessing
+        - rejected
+        - expired
+    StartRentRequest:
+      type: object
+      properties:
+        customerId:
+          type: string
+          description: Идентификатор клиента
+        bookingId:
+          type: string
+          description: Идентификатор бронирования
+        vehicleId:
+          type: string
+          description: Идентификатор транспортного средства
+    StartRentResponse:
+      type: object
+      properties:
+        rentId:
+          type: string
+          description: Идентификатор аренды
+    CompleteRentResponse:
+      type: object
+      properties:
+        actual_amount:
+          type: number
+          format: double
+          description: Фактическая сумма аренды
+    GetRentByIdResponse:
+      type: object
+      properties:
+        rentId:
+          type: string
+          description: Идентификатор аренды
+        status:
+          $ref: '#/components/schemas/RentStatus'
+        bookingId:
+          type: string
+          description: Идентификатор бронирования
+        customerId:
+          type: string
+          description: Идентификатор клиента
+        vehicleId:
+          type: string
+          description: Идентификатор транспортного средства
+        start:
+          type: string
+          format: date-time
+          description: Дата начала аренды
+        end:
+          type: string
+          format: date-time
+          description: Дата окончания аренды
+        actual_amount:
+          type: number
+          format: double
+          description: Фактическая сумма аренды
+    GetCurrentAmountRentResponse:
+      type: object
+      properties:
+        rentId:
+          type: string
+          description: Идентификатор аренды
+        current_amount:
+          type: number
+          format: double
+          description: Текущая сумма аренды
+    RentStatus:
+      type: string
+      enum:
+        - inProgress
+        - completed
+      description: Статус аренды
+      example: 0

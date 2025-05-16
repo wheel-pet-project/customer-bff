@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option csharp_namespace = "Api";
+
+package booking.v1;
+
+service Booking {
+  rpc BookVehicle (BookVehicleRequest) returns (BookVehicleResponse);
+  rpc CancelBookingVehicle (CancelBookingRequest) returns (CancelBookingResponse);
+}
+
+message BookVehicleRequest{
+  string vehicle_id = 1;
+  string customer_id = 2;
+}
+message BookVehicleResponse{
+  string booking_id = 1;
+}
+
+
+message CancelBookingRequest{
+  string booking_id = 1;
+}
+message CancelBookingResponse{}
+
+
+
