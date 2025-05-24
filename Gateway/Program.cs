@@ -5,23 +5,43 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        var services = builder.Services;
-        
-        services.AddControllers();
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+
+        ConfigureServices(builder);
 
         var app = builder.Build();
         
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
+        ConfigureAppForDeveloperEnvironment(app);
+        
+        ConfigureApp(app);
+
+        app.Run();
+    }
+
+    private static void ConfigureServices(WebApplicationBuilder builder)
+    {
+        var services = builder.Services;
+
+        services
+            .RegisterGrpcClientsAndConfigure(builder.Configuration)
+            .RegisterControllersWithNewtonsoft()
+            .RegisterSwagger();
+
+    }
+
+    private static void ConfigureAppForDeveloperEnvironment(WebApplication app)
+    {
+        if (app.Environment.IsDevelopment() == false) return;
+        
+        app
+            .UseDeveloperExceptionPage()
+            .UseSwagger()
+            .UseSwaggerUI();
+    }
+
+    private static void ConfigureApp(WebApplication app)
+    {
         app.UseHttpsRedirection();
         app.UseAuthorization();
         app.MapControllers();
-
-        app.Run();
     }
 }

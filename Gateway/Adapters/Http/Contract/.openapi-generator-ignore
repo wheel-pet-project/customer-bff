@@ -13,3 +13,4 @@ src/OpenApiContractV1/.gitignore
 src/OpenApiContractV1/appsettings*
 src/OpenApiContractV1/Dockerfile
 src/OpenApiContractV1/Program.cs
+src/OpenApiContractV1/Startup.cs

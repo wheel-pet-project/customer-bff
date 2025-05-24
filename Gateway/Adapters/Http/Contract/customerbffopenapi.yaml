@@ -6,9 +6,9 @@ tags:
   - name: identity
     description: аутентификация, авторизация, создание и восстановление аккаунта клиента
   - name: model
-    description: модели доступные для аренды
+    description: модели автомобилей доступные для аренды
   - name: driving-license
-    description: Загрузка водительского удостоверения
+    description: управление водительским удостоверением
   - name: vehicle
     description: автомобили доступные для аренды
   - name: booking
@@ -20,6 +20,7 @@ tags:
 paths:
   /rent/start:
     post:
+      operationId: startRent
       tags:
         - rent
       summary: Начать аренду
@@ -40,11 +41,12 @@ paths:
           description: Внутренняя ошибка сервера
   /rent/{rentId}/complete:
     post:
+      operationId: completeRent
       tags:
         - rent
       summary: Завершить аренду
       parameters:
-        - in: query
+        - in: path
           name: rentId
           schema:
             type: string
@@ -64,11 +66,12 @@ paths:
           description: Внутренняя ошибка сервера
   /rent/{rentId}/get-current-amount:
     get:
+      operationId: getCurrentAmountForRent
       tags:
         - rent
       summary: Получить все текущие аренды
       parameters:
-        - in: query
+        - in: path
           name: rentId
           schema:
             type: string
@@ -86,11 +89,12 @@ paths:
           description: Внутренняя ошибка сервера
   /driving-license/{licenseId}:
     get:
+      operationId: getDrivingLicenseById
       tags:
         - driving-license
       summary: Получение водительского удостоверения по идентификатору
       parameters:
-        - in: query
+        - in: path
           name: licenseId
           schema:
             type: string
@@ -106,19 +110,12 @@ paths:
                 $ref: '#/components/schemas/GetLicenseByIdResponse'
         '500':
           description: Внутренняя ошибка сервера
-  /driving-license/{licenseId}/upload-license:
+  /driving-license/upload:
     post:
+      operationId: uploadDrivingLicense
       tags:
         - driving-license
       summary: Загрузка водительского удостоверения
-      parameters:
-        - in: query
-          name: rentId
-          schema:
-            type: string
-            format: uuid
-          required: true
-          description: Идентификатор водительского удостоверения
       requestBody:
         required: true
         content:
@@ -136,11 +133,12 @@ paths:
           description: Внутренняя ошибка сервера
   /driving-license/{licenseId}/upload-photos:
     post:
+      operationId: uploadDrivingLicensePhotos
       tags:
         - driving-license
       summary: Загрузка фотографий водительского удостоверения
       parameters:
-        - in: query
+        - in: path
           name: licenseId
           schema:
             type: string
@@ -160,6 +158,7 @@ paths:
           description: Внутренняя ошибка сервера
   /booking/book-vehicle:
     post:
+      operationId: bookVehicle
       tags:
         - booking
       summary: Book a vehicle
@@ -178,13 +177,14 @@ paths:
                 $ref: '#/components/schemas/BookVehicleResponse'
         '500':
           description: Internal server error
-  /booking/{bookingId}/cancel-booking:
+  /booking/{bookingId}/cancel:
     post:
+      operationId: cancelBookingVehicle
       tags:
         - booking
       summary: Cancel a booking
       parameters:
-        - in: query
+        - in: path
           name: bookingId
           schema:
             type: string
@@ -198,6 +198,7 @@ paths:
           description: Internal server error
   /identity/authenticate:
     post:
+      operationId: authenticate
       tags:
         - identity
       summary: Аутентификация аккаунта
@@ -220,6 +221,7 @@ paths:
           description: Аккаунт с таким идентификатором не найден
   /identity/account/create:
     post:
+      operationId: createAccount
       tags:
         - identity
       summary: Создание аккаунта
@@ -238,8 +240,9 @@ paths:
                 $ref: '#/components/schemas/CreateResponse'
         '500':
           description: Внутренняя ошибка сервера
-  /identity/{accountId}/confirm-email:
+  /identity/{accountId}/confirmation-token/{confirmationToken}/confirm:
     post:
+      operationId: confirmAccountEmail
       tags:
         - identity
       summary: Подтверждение email аккаунта
@@ -247,6 +250,13 @@ paths:
         - name: accountId
           in: path
           description: Идентификатор аккаунта
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: confirmationToken
+          in: path
+          description: Токен подтверждения
           required: true
           schema:
             type: string
@@ -265,6 +275,7 @@ paths:
           description: Токен подтверждения не найден
   /identity/refresh-access-token:
     post:
+      operationId: refreshAccessToken
       tags:
         - identity
       summary: Обновление токена доступа
@@ -287,6 +298,7 @@ paths:
           description: Refresh token с таким идентификатором не найден
   /identity/account/{accountId}/recover-password:
     post:
+      operationId: recoverPassword
       tags:
         - identity
       summary: Восстановление пароля
@@ -312,6 +324,7 @@ paths:
           description: Аккаунт с таким идентификатором не найден
   /identity/account/{accountId}/update-password:
     post:
+      operationId: updatePassword
       tags:
         - identity
       summary: Обновление пароля
@@ -337,6 +350,7 @@ paths:
           description: Аккаунт с таким идентификатором не найден
   /model/{page}/{pageSize}:
     get:
+      operationId: getAllModels
       tags:
         - model
       summary: Получение всех моделей автомобилей
@@ -344,11 +358,13 @@ paths:
         - name: page
           in: path
           description: Номер страницы
+          required: true
           schema:
             type: integer
         - name: pageSize
           in: path
           description: Количество элементов на странице
+          required: true
           schema:
             type: integer
       responses:
@@ -360,74 +376,9 @@ paths:
                 $ref: '#/components/schemas/GetAllModelsResponse'
         '500':
           description: Внутренняя ошибка сервера
-  /model/add:
-    post:
-      tags:
-        - model
-      summary: Добавление новой модели автомобиля
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddModelRequest'
-      responses:
-        '200':
-          description: Успешная операция
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AddModelResponse'
-        '500':
-          description: Внутренняя ошибка сервера
-  /model/{modelId}/category:
-    put:
-      tags:
-        - model
-      summary: Обновление категории модели автомобиля
-      parameters:
-        - name: modelId
-          in: path
-          description: Идентификатор модели автомобиля
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateModelCategoryRequest'
-      responses:
-        '200':
-          description: Успешная операция
-        '500':
-          description: Внутренняя ошибка сервера
-  /model/{modelId}/tariff:
-    put:
-      tags:
-        - model
-      summary: Обновление тарифа модели автомобиля
-      parameters:
-        - name: modelId
-          in: path
-          description: Идентификатор модели автомобиля
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateModelTariffRequest'
-      responses:
-        '200':
-          description: Успешная операция
-        '500':
-          description: Внутренняя ошибка сервера
   /model/{modelId}:
     get:
+      operationId: getModelById
       tags:
         - model
       summary: Получение модели автомобиля по идентификатору
@@ -447,110 +398,9 @@ paths:
                 $ref: '#/components/schemas/GetModelByIdResponse'
         '500':
           description: Внутренняя ошибка сервера
-  /vehicle/{page}/{pageSize}:
-    get:
-      tags:
-        - vehicle
-      summary: Получение всех автомобилей
-      parameters:
-        - name: status
-          in: query
-          required: true
-          description: Статус автомобилей
-          schema:
-            $ref: '#/components/schemas/Status'
-        - name: page
-          in: path
-          description: Номер страницы
-          schema:
-            type: integer
-        - name: pageSize
-          in: path
-          description: Количество элементов на странице
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Успешная операция
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetAllVehiclesResponse'
-        '500':
-          description: Внутренняя ошибка сервера
-  /vehicle:
-    post:
-      tags:
-        - vehicle
-      summary: Добавление нового автомобиля
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddVehicleRequest'
-      responses:
-        '200':
-          description: Успешная операция
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AddVehicleResponse'
-        '500':
-          description: Внутренняя ошибка сервера
-  /vehicle/{vehicleId}/ready:
-    post:
-      tags:
-        - vehicle
-      summary: Отметить автомобиль как готовый к выпуску
-      parameters:
-        - name: vehicleId
-          in: path
-          description: Идентификатор автомобиля
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Успешная операция
-        '500':
-          description: Внутренняя ошибка сервера
-  /vehicle/{vehicleId}/release:
-    post:
-      tags:
-        - vehicle
-      summary: Выпуск автомобиля
-      parameters:
-        - name: vehicleId
-          in: path
-          description: Идентификатор автомобиля
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Успешная операция
-        '500':
-          description: Внутренняя ошибка сервера
-  /vehicle/{vehicleId}/service:
-    post:
-      tags:
-        - vehicle
-      summary: Отправка автомобиля на сервис
-      parameters:
-        - name: vehicleId
-          in: path
-          description: Идентификатор автомобиля
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Успешная операция
-        '500':
-          description: Внутренняя ошибка сервера
   /vehicle/{vehicleId}:
     get:
+      operationId: getVehicleById
       tags:
         - vehicle
       summary: Получение автомобиля по идентификатору
@@ -570,24 +420,9 @@ paths:
                 $ref: '#/components/schemas/GetVehicleByIdResponse'
         '500':
           description: Внутренняя ошибка сервера
-    delete:
-      tags:
-        - vehicle
-      summary: Удаление автомобиля
-      parameters:
-        - name: vehicleId
-          in: path
-          description: Идентификатор автомобиля
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Успешная операция
-        '500':
-          description: Внутренняя ошибка сервера
   /vehicle/get-in-square:
     get:
+      operationId: getVehiclesInSquare
       tags:
         - vehicle
       summary: Получение автомобилей в заданном квадрате
@@ -621,6 +456,7 @@ paths:
           description: Внутренняя ошибка сервера
   /vehiclecheck/start-check:
     post:
+      operationId: startCheck
       tags:
         - vehicle-check
       summary: Начало проверки автомобиля
@@ -641,11 +477,12 @@ paths:
           description: Внутренняя ошибка сервера
   /vehiclecheck/{checkId}/add-damage-fixations:
     post:
+      operationId: addDamageFixationsToCheck
       tags:
         - vehicle-check
       summary: Добавление отметок повреждений
       parameters:
-        - in: query
+        - in: path
           name: checkId
           schema:
             type: string
@@ -665,11 +502,12 @@ paths:
           description: Внутренняя ошибка сервера
   /vehiclecheck/{checkId}/complete-check:
     post:
+      operationId: completeCheck
       tags:
         - vehicle-check
       summary: Завершение проверки автомобиля
       parameters:
-        - in: query
+        - in: path
           name: checkId
           schema:
             type: string
@@ -683,6 +521,7 @@ paths:
           description: Внутренняя ошибка сервера
   /vehiclecheck/{checkId}:
     get:
+      operationId: getCheckById
       tags:
         - vehicle-check
       summary: Получение информации о проверке автомобиля по идентификатору
@@ -691,6 +530,9 @@ paths:
           in: path
           description: Идентификатор проверки
           required: true
+          schema: 
+            type: string
+            format: uuid
       responses:
         '200':
           description: Успешная операция
@@ -700,31 +542,22 @@ paths:
                 $ref: '#/components/schemas/GetCheckByIdResponse'
         '500':
           description: Внутренняя ошибка сервера
-  /vehiclecheck/get-all-checks-for-considerate-review/{page}/{pageSize}:
-    get:
-      tags:
-        - vehicle-check
-      summary: Получение всех проверок автомобилей для рассмотрения
-      parameters:
-        - name: page
-          in: path
-          description: Страница
-          required: true
-        - name: pageSize
-          in: path
-          description: Размер страницы
-          required: true
-      responses:
-        '200':
-          description: Успешная операция
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetAllChecksForConsiderateReviewResponse'
-        '500':
-          description: Внутренняя ошибка сервера
 components:
   schemas:
+    Error:
+      type: object
+      required: 
+        - statusCode
+      properties: 
+        statusCode:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: "error"
+        description:
+          type: string
+          example: "description"
     AuthenticateRequest:
       type: object
       required:
@@ -828,35 +661,6 @@ components:
         resetToken:
           type: string
           example: "123e4567-e89b-12d3-a456-426614174000"
-    AddModelRequest:
-      type: object
-      required:
-        - brand
-        - carModelId
-        - category
-        - pricePerMinute
-        - pricePerHour
-        - price_per_day
-      properties:
-        brand:
-          type: string
-        carModel:
-          type: string
-        category:
-          type: string
-        pricePerMinute:
-          type: number
-        pricePerHour:
-          type: number
-        price_per_day:
-          type: number
-    AddModelResponse:
-      type: object
-      required:
-        - model_id
-      properties:
-        model_id:
-          type: string
     UpdateModelCategoryRequest:
       type: object
       required:
@@ -911,59 +715,6 @@ components:
           type: number
         price_per_day:
           type: number
-    AddVehicleRequest:
-      type: object
-      required:
-        - model_id
-        - plate_number
-        - color
-        - vin
-      properties:
-        model_id:
-          type: string
-        plate_number:
-          type: string
-        color:
-          $ref: '#/components/schemas/Color'
-        vin:
-          type: string
-        location:
-          $ref: '#/components/schemas/Location'
-    AddVehicleResponse:
-      type: object
-      required:
-        - vehicleId
-      properties:
-        vehicleId:
-          type: string
-    MarkAsReadiedForReleaseVehicleResponse:
-      type: object
-    ReleaseVehicleResponse:
-      type: object
-    SendToServiceVehicleResponse:
-      type: object
-    DeleteVehicleResponse:
-      type: object
-    GetAllVehiclesResponse:
-      type: object
-      properties:
-        vehicles:
-          type: array
-          items:
-            $ref: '#/components/schemas/VehicleShortView'
-    VehicleShortView:
-      type: object
-      properties:
-        vehicleId:
-          type: string
-        brand:
-          type: string
-        carModelId:
-          type: string
-        color:
-          $ref: '#/components/schemas/Color'
-        location:
-          $ref: '#/components/schemas/Location'
     GetVehicleByIdResponse:
       type: object
       properties:
@@ -1110,13 +861,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Fixation'
-    GetAllChecksForConsiderateReviewResponse:
-      type: object
-      properties:
-        checks:
-          type: array
-          items:
-            $ref: '#/components/schemas/Check'
     Check:
       type: object
       required:

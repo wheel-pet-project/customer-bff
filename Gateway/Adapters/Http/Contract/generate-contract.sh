@@ -1,0 +1,1 @@
+openapi-generator generate -i customerbffopenapi.yaml -g aspnetcore -o . --package-name OpenApiContractV1 --additional-properties classModifier=abstract --additional-properties operationResultTask=true

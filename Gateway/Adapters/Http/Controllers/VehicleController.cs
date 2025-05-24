@@ -1,13 +1,18 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using OpenApiContractV1.Controllers;
+using OpenApiContractV1.Models;
 
-namespace Gateway.Controllers;
+namespace Gateway.Adapters.Http.Controllers;
 
-
-[ApiController]
-[ApiVersion(1)]
-[Route("api/v{v:apiVersion}/vehicle")]
-public class VehicleController : ControllerBase
+public class VehicleController : VehicleApiController
 {
-    
+    public override Task<IActionResult> GetVehicleById(string vehicleId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task<IActionResult> GetVehiclesInSquare(Status status, Location upperLeftLocation, Location lowerRightLocation)
+    {
+        throw new NotImplementedException();
+    }
 }
