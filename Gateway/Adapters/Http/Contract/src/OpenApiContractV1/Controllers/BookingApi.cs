@@ -33,7 +33,7 @@ namespace OpenApiContractV1.Controllers
         /// <summary>
         /// Book a vehicle
         /// </summary>
-        /// <param name="bookVehicleRequest"></param>
+        /// <param name="request"></param>
         /// <response code="200">Successful operation</response>
         /// <response code="500">Internal server error</response>
         [HttpPost]
@@ -42,7 +42,7 @@ namespace OpenApiContractV1.Controllers
         [ValidateModelState]
         [SwaggerOperation("BookVehicle")]
         [SwaggerResponse(statusCode: 200, type: typeof(BookVehicleResponse), description: "Successful operation")]
-        public abstract Task<IActionResult> BookVehicle([FromBody]BookVehicleRequest bookVehicleRequest);
+        public abstract Task<IActionResult> BookVehicle([FromBody]BookVehicleRequest request);
 
         /// <summary>
         /// Cancel a booking

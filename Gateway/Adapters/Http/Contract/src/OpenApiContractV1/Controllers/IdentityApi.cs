@@ -50,16 +50,14 @@ namespace OpenApiContractV1.Controllers
         /// </summary>
         /// <param name="accountId">Идентификатор аккаунта</param>
         /// <param name="confirmationToken">Токен подтверждения</param>
-        /// <param name="confirmEmailRequest"></param>
         /// <response code="200">Успешная операция</response>
         /// <response code="500">Внутренняя ошибка сервера</response>
         /// <response code="404">Токен подтверждения не найден</response>
         [HttpPost]
         [Route("/identity/{accountId}/confirmation-token/{confirmationToken}/confirm")]
-        [Consumes("application/json")]
         [ValidateModelState]
         [SwaggerOperation("ConfirmAccountEmail")]
-        public abstract Task<IActionResult> ConfirmAccountEmail([FromRoute (Name = "accountId")][Required]Guid accountId, [FromRoute (Name = "confirmationToken")][Required]string confirmationToken, [FromBody]ConfirmEmailRequest confirmEmailRequest);
+        public abstract Task<IActionResult> ConfirmAccountEmail([FromRoute (Name = "accountId")][Required]Guid accountId, [FromRoute (Name = "confirmationToken")][Required]string confirmationToken);
 
         /// <summary>
         /// Создание аккаунта

@@ -27,6 +27,13 @@ namespace OpenApiContractV1.Models
     public partial class CreateRequest : IEquatable<CreateRequest>
     {
         /// <summary>
+        /// Gets or Sets Role
+        /// </summary>
+        [Required]
+        [DataMember(Name="role", EmitDefaultValue=true)]
+        public Role Role { get; set; }
+
+        /// <summary>
         /// Gets or Sets Email
         /// </summary>
         /* <example>example@example.com</example> */
@@ -58,6 +65,7 @@ namespace OpenApiContractV1.Models
         {
             var sb = new StringBuilder();
             sb.Append("class CreateRequest {\n");
+            sb.Append("  Role: ").Append(Role).Append("\n");
             sb.Append("  Email: ").Append(Email).Append("\n");
             sb.Append("  Phone: ").Append(Phone).Append("\n");
             sb.Append("  Password: ").Append(Password).Append("\n");
@@ -98,6 +106,11 @@ namespace OpenApiContractV1.Models
 
             return 
                 (
+                    Role == other.Role ||
+                    
+                    Role.Equals(other.Role)
+                ) && 
+                (
                     Email == other.Email ||
                     Email != null &&
                     Email.Equals(other.Email)
@@ -124,6 +137,8 @@ namespace OpenApiContractV1.Models
             {
                 var hashCode = 41;
                 // Suitable nullity checks etc, of course :)
+                    
+                    hashCode = hashCode * 59 + Role.GetHashCode();
                     if (Email != null)
                     hashCode = hashCode * 59 + Email.GetHashCode();
                     if (Phone != null)

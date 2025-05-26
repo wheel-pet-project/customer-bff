@@ -40,6 +40,7 @@ src/OpenApiContractV1/Models/RecoverPasswordRequest.cs
 src/OpenApiContractV1/Models/RefreshAccessTokenRequest.cs
 src/OpenApiContractV1/Models/RefreshAccessTokenResponse.cs
 src/OpenApiContractV1/Models/RentStatus.cs
+src/OpenApiContractV1/Models/Role.cs
 src/OpenApiContractV1/Models/StartCheckRequest.cs
 src/OpenApiContractV1/Models/StartCheckResponse.cs
 src/OpenApiContractV1/Models/StartRentRequest.cs

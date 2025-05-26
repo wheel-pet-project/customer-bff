@@ -260,12 +260,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ConfirmEmailRequest'
       responses:
         '200':
           description: Успешная операция
@@ -544,6 +538,14 @@ paths:
           description: Внутренняя ошибка сервера
 components:
   schemas:
+    Role:
+      type: string
+      enum:
+        - customer
+        - admin
+        - support
+        - maintenance
+        - hr
     Error:
       type: object
       required: 
@@ -590,6 +592,8 @@ components:
         - phone
         - password
       properties:
+        role:
+          $ref: '#/components/schemas/Role'
         email:
           type: string
           example: "example@example.com"

@@ -14,14 +14,14 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection RegisterGrpcClientsAndConfigure(this IServiceCollection services, IConfiguration configuration)
     {
         var balancerConfigsSection = configuration.GetSection("BalancerConfigs");
-        var identityCfg = balancerConfigsSection.GetSection("Identity").Get<IdentityBalancerConfig>();
-        var bookingCfg = balancerConfigsSection.GetSection("Booking").Get<BookingBalancerConfig>();
-        var vehicleCheckCfg = balancerConfigsSection.GetSection("VehicleCheck").Get<VehicleCheckBalancerConfig>();
-        var drivingLicenseCfg = balancerConfigsSection.GetSection("DrivingLicense").Get<DrivingLicenseBalancerConfig>();
-        var rentCfg = balancerConfigsSection.GetSection("RentBalancer").Get<RentBalancerConfig>();
-        var vehicleFleetCfg = balancerConfigsSection.GetSection("VehicleFleet").Get<VehicleFleetBalancerConfig>();
+        var identityCfg = balancerConfigsSection.GetSection("Identity").Get<IdentityChannelConfig>();
+        var bookingCfg = balancerConfigsSection.GetSection("Booking").Get<BookingChannelConfig>();
+        var vehicleCheckCfg = balancerConfigsSection.GetSection("VehicleCheck").Get<VehicleCheckChannelConfig>();
+        var drivingLicenseCfg = balancerConfigsSection.GetSection("DrivingLicense").Get<DrivingLicenseChannelConfig>();
+        var rentCfg = balancerConfigsSection.GetSection("RentBalancer").Get<RentChannelConfig>();
+        var vehicleFleetCfg = balancerConfigsSection.GetSection("VehicleFleet").Get<VehicleFleetChannelConfig>();
 
-        var configs = new List<MicroserviceBalancerConfig?>
+        var configs = new List<ClientChannelConfig?>
         {
             identityCfg,
             bookingCfg,
