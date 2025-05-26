@@ -22,10 +22,10 @@ public class Program
         var services = builder.Services;
 
         services
-            .RegisterGrpcClientsAndConfigure(builder.Configuration)
+            .RegisterGrpcClientsAndConfigure()
+            .RegisterGrpcClientWrappers()
             .RegisterControllersWithNewtonsoft()
             .RegisterSwagger();
-
     }
 
     private static void ConfigureAppForDeveloperEnvironment(WebApplication app)

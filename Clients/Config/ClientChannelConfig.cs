@@ -2,8 +2,8 @@ namespace Clients.Config;
 
 public class ClientChannelConfig
 {
-    public required Uri Uri { get; init; }
-    public required string ApiKey { get; init; }
+    public Uri Uri { get; init; } = null!;
+    public string ApiKey { get; init; } = null!;
 }
 
 public class IdentityChannelConfig : ClientChannelConfig;

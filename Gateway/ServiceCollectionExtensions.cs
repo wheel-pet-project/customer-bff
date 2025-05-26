@@ -1,5 +1,11 @@
 using System.Reflection;
 using Clients;
+using Clients.Clients.Booking;
+using Clients.Clients.Check;
+using Clients.Clients.DrivingLicense;
+using Clients.Clients.Identity;
+using Clients.Clients.Rent;
+using Clients.Clients.VehicleFleet;
 using Clients.Config;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
@@ -11,27 +17,39 @@ namespace Gateway;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection RegisterGrpcClientsAndConfigure(this IServiceCollection services, IConfiguration configuration)
+    private static readonly GatewayConfiguration Configuration;
+    
+    public static IServiceCollection RegisterGrpcClientsAndConfigure(this IServiceCollection services)
     {
-        var balancerConfigsSection = configuration.GetSection("BalancerConfigs");
-        var identityCfg = balancerConfigsSection.GetSection("Identity").Get<IdentityChannelConfig>();
-        var bookingCfg = balancerConfigsSection.GetSection("Booking").Get<BookingChannelConfig>();
-        var vehicleCheckCfg = balancerConfigsSection.GetSection("VehicleCheck").Get<VehicleCheckChannelConfig>();
-        var drivingLicenseCfg = balancerConfigsSection.GetSection("DrivingLicense").Get<DrivingLicenseChannelConfig>();
-        var rentCfg = balancerConfigsSection.GetSection("RentBalancer").Get<RentChannelConfig>();
-        var vehicleFleetCfg = balancerConfigsSection.GetSection("VehicleFleet").Get<VehicleFleetChannelConfig>();
-
         var configs = new List<ClientChannelConfig?>
         {
-            identityCfg,
-            bookingCfg,
-            vehicleCheckCfg,
-            drivingLicenseCfg,
-            rentCfg,
-            vehicleFleetCfg
+            ParseToChannelConfig<IdentityChannelConfig>(Configuration.Identity),
+            ParseToChannelConfig<BookingChannelConfig>(Configuration.Booking),
+            ParseToChannelConfig<VehicleCheckChannelConfig>(Configuration.VehicleCheck),
+            ParseToChannelConfig<DrivingLicenseChannelConfig>(Configuration.DrivingLicense),
+            ParseToChannelConfig<RentChannelConfig>(Configuration.Rent),
+            ParseToChannelConfig<VehicleFleetChannelConfig>(Configuration.VehicleFleet)
         };
         
         services.AddGrpcClientsForMicroservices(configs);
+
+        return services;
+
+        T ParseToChannelConfig<T>(ChannelConfiguration channelCfg)
+        where T: ClientChannelConfig, new()
+        {
+            return new T { Uri = new Uri(channelCfg.Uri), ApiKey = channelCfg.ApiKey };
+        }
+    }
+
+    public static IServiceCollection RegisterGrpcClientWrappers(this IServiceCollection services)
+    {
+        services.AddScoped<IdentityClientWrapper>();
+        services.AddScoped<BookingClientWrapper>();
+        services.AddScoped<CheckClientWrapper>();
+        services.AddScoped<DrivingLicenseClientWrapper>();
+        services.AddScoped<RentClientWrapper>();
+        services.AddScoped<VehicleFleetClientWrapper>();
 
         return services;
     }
@@ -70,4 +88,50 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+    
+    
+    static ServiceCollectionExtensions()
+    {
+        var env = Environment.GetEnvironmentVariables();
+        
+        var identityCfg = 
+            new ChannelConfiguration(GetFromEnvOrThrow("IDENTITY_URL"), GetFromEnvOrThrow("IDENTITY_API_KEY"));
+        var bookingCfg = 
+            new ChannelConfiguration(GetFromEnvOrThrow("BOOKING_URL"), GetFromEnvOrThrow("BOOKING_API_KEY"));
+        var vehicleCheckCfg =
+            new ChannelConfiguration(GetFromEnvOrThrow("VEHICLECHECK_URL"), GetFromEnvOrThrow("VEHICLECHECK_API_KEY"));
+        var drivingLicenseCfg =
+            new ChannelConfiguration(GetFromEnvOrThrow("DRIVINGLICENSE_URL"), GetFromEnvOrThrow("DRIVINGLICENSE_API_KEY"));
+        var rentCfg = 
+            new ChannelConfiguration(GetFromEnvOrThrow("RENT_URL"), GetFromEnvOrThrow("RENT_API_KEY"));
+        var vehicleFleetCfg = 
+            new ChannelConfiguration(GetFromEnvOrThrow("VEHICLEFLEET_URL"), GetFromEnvOrThrow("VEHICLEFLEET_API_KEY"));
+
+        Configuration = new GatewayConfiguration(
+            identityCfg,
+            bookingCfg,
+            vehicleCheckCfg,
+            drivingLicenseCfg,
+            rentCfg,
+            vehicleFleetCfg);
+        
+        string GetFromEnvOrThrow(string variable)
+        {
+            var value = env[variable];
+            if (value == null) throw new ArgumentException($"'{variable}' isn't set");
+
+            return (string)value;
+        }
+    }
+
+    private record GatewayConfiguration(
+        ChannelConfiguration Identity,
+        ChannelConfiguration Booking,
+        ChannelConfiguration VehicleCheck,
+        ChannelConfiguration DrivingLicense,
+        ChannelConfiguration Rent,
+        ChannelConfiguration VehicleFleet
+    );
+
+    private record ChannelConfiguration(string Uri, string ApiKey);
 }
