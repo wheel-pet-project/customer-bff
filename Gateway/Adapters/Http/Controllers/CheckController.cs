@@ -22,20 +22,20 @@ public class CheckController(CheckClientWrapper clientWrapper) : VehicleCheckApi
         await clientWrapper.AddDamageFixations(CreateGrpcRequest(checkId, request));
 
         return Ok();
-        
+
         Api.AddDamageFixationsRequest CreateGrpcRequest(Guid id, AddDamageFixationsRequest r)
         {
             var fixationCategoryMapper = new FixationCategoryEnumMapper();
-            
+
             var grpcRequest = new Api.AddDamageFixationsRequest { CheckId = id.ToString() };
-            
+
             grpcRequest.Fixations.AddRange(r.Fixations.Select(x => new Api.AddDamageFixationsRequest.Types.Fixation
             {
                 Category = fixationCategoryMapper.ToProto(x.Category),
                 Description = x.Description,
                 PhotoBytes = ByteString.CopyFrom(x.PhotoBytes.AsSpan())
             }));
-            
+
             return grpcRequest;
         }
     }
@@ -57,14 +57,13 @@ public class CheckController(CheckClientWrapper clientWrapper) : VehicleCheckApi
         OpenApiContractV1.Models.GetCheckByIdResponse MapToResponse(GetCheckByIdResponse grpcResponse)
         {
             var fixationCategoryMapper = new FixationCategoryEnumMapper();
-            
+
             return new OpenApiContractV1.Models.GetCheckByIdResponse
             {
                 CheckId = Guid.Parse((ReadOnlySpan<char>)grpcResponse.CheckId),
                 BookingId = Guid.Parse((ReadOnlySpan<char>)grpcResponse.BookingId),
                 VehicleId = Guid.Parse((ReadOnlySpan<char>)grpcResponse.VehicleId),
                 Start = grpcResponse.Start.ToDateTime(),
-                // todo: end - nullable type
                 End = grpcResponse.End == null ? null : grpcResponse.End.ToDateTime(),
                 Fixations = grpcResponse.Fixations.Select(x => new Fixation
                     {
@@ -86,7 +85,8 @@ public class CheckController(CheckClientWrapper clientWrapper) : VehicleCheckApi
 
         OpenApiContractV1.Models.StartCheckResponse MapToResponse(StartCheckResponse grpcResponse)
         {
-            return new OpenApiContractV1.Models.StartCheckResponse { CheckId = Guid.Parse((ReadOnlySpan<char>)grpcResponse.CheckId) };
+            return new OpenApiContractV1.Models.StartCheckResponse
+                { CheckId = Guid.Parse((ReadOnlySpan<char>)grpcResponse.CheckId) };
         }
     }
 }
