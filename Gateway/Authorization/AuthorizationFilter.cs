@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Clients.Clients.Identity;
 using FluentResults;
 using Grpc.Core;
@@ -22,19 +23,27 @@ public class AuthorizationFilter(
             CreateResponseIfTokenNotExist(context);
             return;
         }
-
+        
         var authorizationResult = await AuthorizeTokenInIdentity(token);
         if (authorizationResult.IsFailed)
-            CreateResponseForFailedAuthorizationInIdentity(context, string.Join(' ', authorizationResult.Errors));
+        {
+            CreateResponseForFailedAuthorizationInIdentity(context,
+                authorizationResult.Errors.FirstOrDefault(x => x is IdentityAuthorizationError) as
+                    IdentityAuthorizationError);
+            
+            return;
+        }
         
         ValidateStatusAndRole(context, authorizationResult.Value);
+
+        AddClaimsToHttpContext(context, authorizationResult.Value);
     }
-    
+
     private string? GetTokenFromHeader(AuthorizationFilterContext context)
     {
         var headerValue = context.HttpContext.Request.Headers.Authorization.FirstOrDefault();
         
-        var token = headerValue?.Trim();
+        var token = headerValue?.Trim().Split()[1]; // removing 'Bearer ' prefix
 
         return token;
     }
@@ -63,6 +72,19 @@ public class AuthorizationFilter(
         if (roles.All(x => x != authorizationResponse.Role))
             CreateResponseIfRoleNotAcceptedForThisEndpoint(context);
     }
+    
+    private void AddClaimsToHttpContext(AuthorizationFilterContext context, AuthorizeResponse authorizationResult)
+    {
+        var httpContext = context.HttpContext;
+
+        var claims = new List<Claim>
+        {
+            new("customer_id", authorizationResult.AccId),
+            new("status", authorizationResult.Status.ToString())
+        };
+
+        httpContext.User.AddIdentity(new ClaimsIdentity(claims));
+    }
 
     private void CreateResponseIfTokenNotExist(AuthorizationFilterContext context)
     {
@@ -71,9 +93,14 @@ public class AuthorizationFilter(
             StatusCodes.Status401Unauthorized);
     }
 
-    private void CreateResponseForFailedAuthorizationInIdentity(AuthorizationFilterContext context, string description)
+    private void CreateResponseForFailedAuthorizationInIdentity(AuthorizationFilterContext context, IdentityAuthorizationError? error)
     {
-        ChangeResponse(context,
+        var description = "Authorization failed";
+
+        if (error != null) description = error.Message;
+            
+        ChangeResponse(
+            context, 
             description,
             StatusCodes.Status401Unauthorized);
     }
@@ -101,11 +128,11 @@ public class AuthorizationFilter(
     {
         var error = new Error
         {
-            VarError = "Access denied",
             Description = description,
             StatusCode = statusCode,
         };
         
+        context.HttpContext.Response.ContentType = "application/json";
         context.HttpContext.Response.StatusCode = statusCode;
         context.Result = new JsonResult(error);
     }

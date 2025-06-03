@@ -383,6 +383,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '200':
           description: Успешная операция
@@ -405,6 +406,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '200':
           description: Успешная операция
@@ -415,30 +417,17 @@ paths:
         '500':
           description: Внутренняя ошибка сервера
   /vehicle/get-in-square:
-    get:
+    post:
       operationId: getVehiclesInSquare
       tags:
         - vehicle
       summary: Получение автомобилей в заданном квадрате
-      parameters:
-        - name: status
-          in: query
-          description: Статус для фильтрации автомобилей
-          required: true
-          schema:
-            $ref: '#/components/schemas/Status'
-        - name: upper-left-location
-          in: query
-          description: Верхняя левая координата квадрата
-          required: true
-          schema:
-            $ref: '#/components/schemas/Location'
-        - name: lower-right-location
-          in: query
-          description: Нижняя правая координата квадрата
-          required: true
-          schema:
-            $ref: '#/components/schemas/Location'
+      requestBody:
+        required: true
+        content: 
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/GetVehiclesInSquareRequest'
       responses:
         '200':
           description: Успешная операция
@@ -550,13 +539,11 @@ components:
       type: object
       required: 
         - statusCode
+        - description
       properties: 
         statusCode:
           type: integer
           example: 404
-        error:
-          type: string
-          example: "error"
         description:
           type: string
           example: "description"
@@ -698,18 +685,20 @@ components:
       properties:
         model_id:
           type: string
+          format: uuid
         brand:
           type: string
-        carModelId:
+        carModel:
           type: string
     GetModelByIdResponse:
       type: object
       properties:
         model_id:
           type: string
+          format: uuid
         brand:
           type: string
-        carModelId:
+        carModel:
           type: string
         category:
           type: string
@@ -724,11 +713,12 @@ components:
       properties:
         vehicleId:
           type: string
+          format: uuid
         status:
           $ref: '#/components/schemas/Status'
         brand:
           type: string
-        carModelId:
+        carModel:
           type: string
         color:
           $ref: '#/components/schemas/Color'
@@ -744,6 +734,19 @@ components:
           type: number
         pricePerDay:
             type: number
+    GetVehiclesInSquareRequest:
+      type: object
+      required: 
+        - status
+        - upperLeftLocation
+        - lowerRightLocation
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        upperLeftLocation:
+          $ref: '#/components/schemas/Location'
+        lowerRightLocation:
+          $ref: '#/components/schemas/Location'
     GetVehiclesInSquareResponse:
       type: object
       properties:
@@ -759,7 +762,7 @@ components:
           format: uuid
         brand:
           type: string
-        carModelId:
+        carModel:
           type: string
         color:
           $ref: '#/components/schemas/Color'
@@ -767,6 +770,9 @@ components:
           $ref: '#/components/schemas/Location'
     Location:
       type: object
+      required: 
+        - latitude
+        - longitude
       properties:
         latitude:
           type: number
@@ -789,9 +795,11 @@ components:
     Status:
       type: string
       enum:
-        - released
+        - addingInProgress
         - added
+        - notAdded
         - readiedForRelease
+        - released
         - occupied
         - serviced
         - deleted
@@ -819,8 +827,20 @@ components:
         fixations:
           type: array
           items:
-            $ref: '#/components/schemas/Fixation'
+            $ref: '#/components/schemas/UploadingFixation'
     Fixation:
+      type: object
+      required:
+        - photoS3Url
+        - category
+      properties:
+        photoS3Url:
+          type: string
+        category:
+          $ref: '#/components/schemas/FixationCategory'
+        description:
+          type: string
+    UploadingFixation:
       type: object
       required:
         - photoBytes
@@ -845,6 +865,7 @@ components:
         - bookingId
         - vehicleId
         - start
+        - fixations
       properties:
         checkId:
           type: string
@@ -1007,6 +1028,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
     UploadPhotosRequest:
       type: object
       required:
@@ -1034,18 +1056,22 @@ components:
       properties:
         customerId:
           type: string
+          format: uuid
           description: Идентификатор клиента
         bookingId:
           type: string
+          format: uuid
           description: Идентификатор бронирования
         vehicleId:
           type: string
+          format: uuid
           description: Идентификатор транспортного средства
     StartRentResponse:
       type: object
       properties:
         rentId:
           type: string
+          format: uuid
           description: Идентификатор аренды
     CompleteRentResponse:
       type: object
@@ -1088,6 +1114,7 @@ components:
       properties:
         rentId:
           type: string
+          format: uuid
           description: Идентификатор аренды
         current_amount:
           type: number

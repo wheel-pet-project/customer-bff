@@ -7,18 +7,18 @@ public class DrivingLicenseClientWrapper(Proto.DrivingLicenseV1.DrivingLicense.D
 {
     public async Task<UploadLicenseResponse> UploadLicense(UploadLicenseRequest request, CancellationToken ct = default)
     {
-        return await client.UploadLicenseAsync(request, new CallOptions(cancellationToken: ct));
+        return await client.UploadLicenseAsync(request, new CallOptions([], cancellationToken: ct));
     }
 
     public async Task<UploadPhotosResponse> UploadPhotos(UploadPhotosRequest request, CancellationToken ct = default)
     {
-        return await client.UploadPhotosAsync(request, new CallOptions(cancellationToken: ct));
+        return await client.UploadPhotosAsync(request, new CallOptions([], cancellationToken: ct));
     }
 
     public async Task<GetLicenseByIdResponse> GetLicenseById(
         GetLicenseByIdRequest request,
         CancellationToken ct = default)
     {
-        return await client.GetLicenseByIdAsync(request, new CallOptions(cancellationToken: ct));
+        return await client.GetLicenseByIdAsync(request, new CallOptions([], cancellationToken: ct));
     }
 }

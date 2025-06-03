@@ -33,6 +33,7 @@ src/OpenApiContractV1/Models/GetLicenseByIdResponse.cs
 src/OpenApiContractV1/Models/GetModelByIdResponse.cs
 src/OpenApiContractV1/Models/GetRentByIdResponse.cs
 src/OpenApiContractV1/Models/GetVehicleByIdResponse.cs
+src/OpenApiContractV1/Models/GetVehiclesInSquareRequest.cs
 src/OpenApiContractV1/Models/GetVehiclesInSquareResponse.cs
 src/OpenApiContractV1/Models/Location.cs
 src/OpenApiContractV1/Models/ModelShortView.cs
@@ -52,5 +53,6 @@ src/OpenApiContractV1/Models/UpdatePasswordRequest.cs
 src/OpenApiContractV1/Models/UploadLicenseRequest.cs
 src/OpenApiContractV1/Models/UploadLicenseResponse.cs
 src/OpenApiContractV1/Models/UploadPhotosRequest.cs
+src/OpenApiContractV1/Models/UploadingFixation.cs
 src/OpenApiContractV1/Models/VehicleInSquareShortView.cs
 src/OpenApiContractV1/OpenApi/TypeExtensions.cs

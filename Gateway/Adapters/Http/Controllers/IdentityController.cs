@@ -9,10 +9,15 @@ public class IdentityController(IdentityClientWrapper clientWrapper) : IdentityA
 {
     public override async Task<IActionResult> Authenticate(AuthenticateRequest request)
     {
-        var response = await clientWrapper.Authenticate(new Proto.IdentityV1.AuthenticateRequest
+        var serviceResponse = await clientWrapper.Authenticate(new Proto.IdentityV1.AuthenticateRequest
             { Email = request.Email, Pass = request.Password });
 
-        return Ok(new AuthenticateResponse { AccessToken = response.Tkn, RefreshToken = response.RefreshTkn });
+        return Ok(MapToResponse(serviceResponse));
+
+        AuthenticateResponse MapToResponse(Proto.IdentityV1.AuthenticateResponse grpcResponse)
+        {
+            return new AuthenticateResponse { AccessToken = grpcResponse.Tkn, RefreshToken = grpcResponse.RefreshTkn };
+        }
     }
 
     public override async Task<IActionResult> ConfirmAccountEmail(Guid accountId, string confirmationToken)
@@ -35,13 +40,17 @@ public class IdentityController(IdentityClientWrapper clientWrapper) : IdentityA
             Role = roleMapper.ToProto(request.Role)
         });
         
-        return Ok(new CreateResponse { AccountId = Guid.Parse(response.AccId) });
+        return Ok(MapToResponse(response));
+
+        CreateResponse MapToResponse(Proto.IdentityV1.CreateResponse grpcResponse)
+        {
+            return new CreateResponse { AccountId = Guid.Parse((ReadOnlySpan<char>)grpcResponse.AccId) };
+        }
     }
 
     public override async Task<IActionResult> RecoverPassword(string accountId, RecoverPasswordRequest request)
     {
-        await clientWrapper.RecoverPassword(new Proto.IdentityV1.RecoverPasswordRequest
-            { Email = request.Email });
+        await clientWrapper.RecoverPassword(new Proto.IdentityV1.RecoverPasswordRequest { Email = request.Email });
 
         return Ok();
     }
@@ -51,7 +60,12 @@ public class IdentityController(IdentityClientWrapper clientWrapper) : IdentityA
         var response = await clientWrapper.RefreshAccessToken(new Proto.IdentityV1.RefreshAccessTokenRequest
             { RefreshTkn = request.RefreshToken });
 
-        return Ok(new RefreshAccessTokenResponse { AccessToken = response.Tkn, RefreshToken = response.RefreshTkn });
+        return Ok(MapToResponse(response));
+
+        RefreshAccessTokenResponse MapToResponse(Proto.IdentityV1.RefreshAccessTokenResponse grpcResponse)
+        {
+            return new RefreshAccessTokenResponse { AccessToken = grpcResponse.Tkn, RefreshToken = grpcResponse.RefreshTkn };
+        }
     }
 
     public override async Task<IActionResult> UpdatePassword(string accountId, UpdatePasswordRequest request)

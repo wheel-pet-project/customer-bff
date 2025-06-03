@@ -7,11 +7,19 @@ using Clients.Clients.Identity;
 using Clients.Clients.Rent;
 using Clients.Clients.VehicleFleet;
 using Clients.Config;
+using Clients.Interceptors;
+using Gateway.Middlewares;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using OpenApiContractV1.Formatters;
 using OpenApiContractV1.OpenApi;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace Gateway;
 
@@ -54,6 +62,13 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection RegisterInterceptors(this IServiceCollection services)
+    {
+        services.AddScoped<CorrelationInterceptor>();
+
+        return services;
+    }
+
     public static IServiceCollection RegisterSwagger(this IServiceCollection services)
     {
         services.AddSwaggerGen(options =>
@@ -89,6 +104,60 @@ public static class ServiceCollectionExtensions
         return services;
     }
     
+    public static IServiceCollection RegisterTelemetry(this IServiceCollection services)
+    {
+        services.AddOpenTelemetry()
+            .WithMetrics(builder =>
+            {
+                builder.AddPrometheusExporter();
+
+                builder.AddMeter("Microsoft.AspNetCore.Hosting",
+                    "Microsoft.AspNetCore.Server.Kestrel");
+                builder.AddView("http.server.request.duration",
+                    new ExplicitBucketHistogramConfiguration
+                    {
+                        Boundaries =
+                        [
+                            0, 0.005, 0.01, 0.025, 0.05,
+                            0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10
+                        ]
+                    });
+            })
+            .WithTracing(builder =>
+            {
+                builder
+                    .AddGrpcClientInstrumentation()
+                    .AddAspNetCoreInstrumentation()
+                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("CustomerBFF"))
+                    .AddSource("CustomerBFF")
+                    .AddSource("MassTransit")
+                    .AddJaegerExporter();
+            });
+
+        return services;
+    }
+    
+    public static IServiceCollection RegisterSerilog(this IServiceCollection services)
+    {
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console(theme: AnsiConsoleTheme.Sixteen)
+            .WriteTo.MongoDBBson(Configuration.MongoConnectionString,
+                "logs",
+                LogEventLevel.Verbose,
+                50,
+                TimeSpan.FromSeconds(10))
+            .CreateLogger();
+        services.AddSerilog();
+
+        return services;
+    }
+
+    public static IServiceCollection RegisterExceptionHandlerMiddleware(this IServiceCollection services)
+    {
+        services.AddTransient<ExceptionHandlerMiddleware>();
+
+        return services;
+    }
     
     static ServiceCollectionExtensions()
     {
@@ -106,6 +175,7 @@ public static class ServiceCollectionExtensions
             new ChannelConfiguration(GetFromEnvOrThrow("RENT_URL"), GetFromEnvOrThrow("RENT_API_KEY"));
         var vehicleFleetCfg = 
             new ChannelConfiguration(GetFromEnvOrThrow("VEHICLEFLEET_URL"), GetFromEnvOrThrow("VEHICLEFLEET_API_KEY"));
+        var mongoConnectionString = GetFromEnvOrThrow("MONGO_CONNECTION_STRING");
 
         Configuration = new GatewayConfiguration(
             identityCfg,
@@ -113,7 +183,8 @@ public static class ServiceCollectionExtensions
             vehicleCheckCfg,
             drivingLicenseCfg,
             rentCfg,
-            vehicleFleetCfg);
+            vehicleFleetCfg,
+            mongoConnectionString);
         
         string GetFromEnvOrThrow(string variable)
         {
@@ -130,7 +201,8 @@ public static class ServiceCollectionExtensions
         ChannelConfiguration VehicleCheck,
         ChannelConfiguration DrivingLicense,
         ChannelConfiguration Rent,
-        ChannelConfiguration VehicleFleet
+        ChannelConfiguration VehicleFleet,
+        string MongoConnectionString
     );
 
     private record ChannelConfiguration(string Uri, string ApiKey);

@@ -18,44 +18,55 @@ public static class ClientsServiceCollectionExtensions
         this IServiceCollection services,
         List<ClientChannelConfig?> configs)
     {
+        const string identity = "IDENTITY";
+        const string booking = "BOOKING";
+        const string vehicleCheck = "VEHICLECHECK";
+        const string drivingLicense = "DRIVINGLICENSE";
+        const string rent = "RENT";
+        const string vehicleFleet = "VEHICLEFLEET";
+        
         var (identityCfg,
             bookingCfg,
             vehicleCheckCfg,
             drivingLicenseCfg,
             rentCfg,
-            vehicleFleetCfg) = DistributeBalancerСonfigs(configs);
+            vehicleFleetCfg) = DistributeСonfigs(configs);
 
 
         services
-            .AddGrpcClient<Identity.IdentityClient>(c => { c.Address = new Uri($"static:///{identityCfg.Uri}"); })
+            .AddGrpcClient<Identity.IdentityClient>(c => { c.Address = new Uri($"static:///{identity}"); })
             .ConfigureChannel(ConfigureByStandard(identityCfg))
             .AddInterceptor<CorrelationInterceptor>();
 
-        services.AddGrpcClient<Booking.BookingClient>(c => { c.Address = new Uri($"static:///{bookingCfg.Uri}"); })
+        services.AddGrpcClient<Booking.BookingClient>(c => { c.Address = new Uri($"static:///{booking}"); })
             .ConfigureChannel(ConfigureByStandard(bookingCfg))
             .AddInterceptor<CorrelationInterceptor>();
 
         services.AddGrpcClient<VehicleCheck.VehicleCheckClient>(c =>
             {
-                c.Address = new Uri($"static:///{vehicleCheckCfg.Uri}");
+                c.CallOptionsActions.Add(callOptions =>
+                {
+                    callOptions.CallOptions = new CallOptions(new Metadata());
+                });
+                c.Address = new Uri($"static:///{vehicleCheck}");
             })
             .ConfigureChannel(ConfigureByStandard(vehicleCheckCfg))
             .AddInterceptor<CorrelationInterceptor>();
 
         services.AddGrpcClient<DrivingLicense.DrivingLicenseClient>(c =>
             {
-                c.Address = new Uri($"static:///{drivingLicenseCfg.Uri}");
+                c.Address = new Uri($"static:///{drivingLicense}");
             })
             .ConfigureChannel(ConfigureByStandard(drivingLicenseCfg))
             .AddInterceptor<CorrelationInterceptor>();
 
-        services.AddGrpcClient<Rent.RentClient>(c => { c.Address = new Uri($"static:///{rentCfg.Uri}"); })
+        services.AddGrpcClient<Rent.RentClient>(c => { c.Address = new Uri($"static:///{rent}"); })
             .ConfigureChannel(ConfigureByStandard(rentCfg))
             .AddInterceptor<CorrelationInterceptor>();
 
         services.AddGrpcClient<VehicleFleet.VehicleFleetClient>(c =>
             {
-                c.Address = new Uri($"static:///{vehicleFleetCfg.Uri}");
+                c.Address = new Uri($"static:///{vehicleFleet}");
             })
             .ConfigureChannel(ConfigureByStandard(vehicleFleetCfg))
             .AddInterceptor<CorrelationInterceptor>();
@@ -63,18 +74,18 @@ public static class ClientsServiceCollectionExtensions
 
         var factory = new StaticResolverFactory(uri =>
         {
-            var host = uri.Host;
-            if (host == identityCfg.Uri.Host) return [new BalancerAddress(identityCfg.Uri.Host, identityCfg.Uri.Port)];
-            if (host == bookingCfg.Uri.Host) return [new BalancerAddress(bookingCfg.Uri.Host, bookingCfg.Uri.Port)];
-            if (host == vehicleCheckCfg.Uri.Host)
-                return [new BalancerAddress(vehicleCheckCfg.Uri.Host, vehicleCheckCfg.Uri.Port)];
-            if (host == drivingLicenseCfg.Uri.Host)
-                return [new BalancerAddress(drivingLicenseCfg.Uri.Host, drivingLicenseCfg.Uri.Port)];
-            if (host == rentCfg.Uri.Host) return [new BalancerAddress(rentCfg.Uri.Host, rentCfg.Uri.Port)];
-            if (host == vehicleFleetCfg.Uri.Host)
-                return [new BalancerAddress(vehicleFleetCfg.Uri.Host, vehicleFleetCfg.Uri.Port)];
+            var serviceName = uri.AbsolutePath[1..];
 
-            throw new ArgumentException("Unknown host");
+            return serviceName switch
+            {
+                identity => [new BalancerAddress(identityCfg.Uri.Host, identityCfg.Uri.Port)],
+                booking => [new BalancerAddress(bookingCfg.Uri.Host, bookingCfg.Uri.Port)],
+                vehicleCheck => [new BalancerAddress(vehicleCheckCfg.Uri.Host, vehicleCheckCfg.Uri.Port)],
+                drivingLicense => [new BalancerAddress(drivingLicenseCfg.Uri.Host, drivingLicenseCfg.Uri.Port)],
+                rent => [new BalancerAddress(rentCfg.Uri.Host, rentCfg.Uri.Port)],
+                vehicleFleet => [new BalancerAddress(vehicleFleetCfg.Uri.Host, vehicleFleetCfg.Uri.Port)],
+                _ => throw new ArgumentException("Unknown host")
+            };
         });
 
         services.AddSingleton<ResolverFactory>(factory);
@@ -106,29 +117,29 @@ public static class ClientsServiceCollectionExtensions
         VehicleCheckChannelConfig,
         DrivingLicenseChannelConfig,
         RentChannelConfig,
-        VehicleFleetChannelConfig) DistributeBalancerСonfigs(List<ClientChannelConfig?> configs)
+        VehicleFleetChannelConfig) DistributeСonfigs(List<ClientChannelConfig?> configs)
     {
         if (configs.Count == 0 || configs.Any(x => x == null))
             throw new ArgumentException("configs list is empty or any config is null");
 
         var identityCfg =
             configs.FirstOrDefault(x => x is IdentityChannelConfig) as IdentityChannelConfig ??
-            throw new ArgumentException("IdentityBalancerConfig not found");
+            throw new ArgumentException("IdentityConfig not found");
         var bookingCfg =
             configs.FirstOrDefault(x => x is BookingChannelConfig) as BookingChannelConfig ??
-            throw new ArgumentException("BookingBalancerConfig not found");
+            throw new ArgumentException("BookingConfig not found");
         var checkCfg =
             configs.FirstOrDefault(x => x is VehicleCheckChannelConfig) as VehicleCheckChannelConfig ??
-            throw new ArgumentException("VehicleCheckBalancerConfig not found");
+            throw new ArgumentException("VehicleCheckConfig not found");
         var drivingLicenseCfg =
             configs.FirstOrDefault(x => x is DrivingLicenseChannelConfig) as DrivingLicenseChannelConfig ??
-            throw new ArgumentException("DrivingLicenseBalancerConfig not found");
+            throw new ArgumentException("DrivingLicenseConfig not found");
         var rentCfg =
             configs.FirstOrDefault(x => x is RentChannelConfig) as RentChannelConfig ??
-            throw new ArgumentException("RentBalancerConfig not found");
+            throw new ArgumentException("RentConfig not found");
         var vehicleFleetCfg =
             configs.FirstOrDefault(x => x is VehicleFleetChannelConfig) as VehicleFleetChannelConfig ??
-            throw new ArgumentException("VehicleFleetBalancerConfig not found");
+            throw new ArgumentException("VehicleFleetConfig not found");
 
         return (
             identityCfg,

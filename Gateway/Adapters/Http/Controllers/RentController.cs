@@ -1,24 +1,55 @@
 
+using Api;
+using Clients.Clients.Rent;
+using Gateway.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OpenApiContractV1.Controllers;
-using OpenApiContractV1.Models;
+using Proto.IdentityV1;
+using GetCurrentAmountRentResponse = OpenApiContractV1.Models.GetCurrentAmountRentResponse;
+using StartRentRequest = OpenApiContractV1.Models.StartRentRequest;
 
 namespace Gateway.Adapters.Http.Controllers;
 
-public class RentController : RentApiController
+[Authorization(Role.CustomerUnspecified)]
+public class RentController(RentClientWrapper clientWrapper) : RentApiController
 {
-    public override Task<IActionResult> CompleteRent(Guid rentId)
+    public override async Task<IActionResult> CompleteRent(Guid rentId)
     {
-        throw new NotImplementedException();
+        await clientWrapper.CompleteRent(new CompleteRentRequest { RentId = rentId.ToString() });
+
+        return Ok();
     }
 
-    public override Task<IActionResult> GetCurrentAmountForRent(Guid rentId)
+    public override async Task<IActionResult> GetCurrentAmountForRent(Guid rentId)
     {
-        throw new NotImplementedException();
+        var serviceResponse = await clientWrapper.GetCurrentAmountRent(new GetCurrentAmountRentRequest { RentId = rentId.ToString() });
+
+        return Ok(MapToResponse(serviceResponse));
+        
+        GetCurrentAmountRentResponse MapToResponse(Api.GetCurrentAmountRentResponse grpcResponse)
+        {
+            return new GetCurrentAmountRentResponse
+            {
+                RentId = Guid.Parse((ReadOnlySpan<char>)grpcResponse.RentId),
+                CurrentAmount = grpcResponse.CurrentAmount
+            };
+        }
     }
 
-    public override Task<IActionResult> StartRent(StartRentRequest startRentRequest)
+    public override async Task<IActionResult> StartRent(StartRentRequest request)
     {
-        throw new NotImplementedException();
+        var serviceResponse = await clientWrapper.StartRent(new Api.StartRentRequest
+        {
+            BookingId = request.BookingId.ToString(), 
+            CustomerId = HttpContext.User.Claims.FirstOrDefault(x => x.Type == "customer_id")?.Value,
+            VehicleId = request.VehicleId.ToString()
+        });
+
+        return Ok(MapToResponse(serviceResponse));
+
+        OpenApiContractV1.Models.StartRentResponse MapToResponse(StartRentResponse grpcResponse)
+        {
+            return new OpenApiContractV1.Models.StartRentResponse { RentId = Guid.Parse((ReadOnlySpan<char>)grpcResponse.RentId) };
+        }
     }
 }

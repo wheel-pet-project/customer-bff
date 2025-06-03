@@ -1,3 +1,5 @@
+using Gateway.Middlewares;
+
 namespace Gateway;
 
 public class Program
@@ -11,7 +13,6 @@ public class Program
         var app = builder.Build();
         
         ConfigureAppForDeveloperEnvironment(app);
-        
         ConfigureApp(app);
 
         app.Run();
@@ -22,10 +23,14 @@ public class Program
         var services = builder.Services;
 
         services
+            .RegisterExceptionHandlerMiddleware()
             .RegisterGrpcClientsAndConfigure()
             .RegisterGrpcClientWrappers()
+            .RegisterInterceptors()
             .RegisterControllersWithNewtonsoft()
-            .RegisterSwagger();
+            .RegisterSwagger()
+            .RegisterSerilog()
+            .RegisterTelemetry();
     }
 
     private static void ConfigureAppForDeveloperEnvironment(WebApplication app)
@@ -40,7 +45,8 @@ public class Program
 
     private static void ConfigureApp(WebApplication app)
     {
-        app.UseHttpsRedirection();
+        // app.UseHttpsRedirection();
+        app.UseMiddleware<ExceptionHandlerMiddleware>();
         app.UseAuthorization();
         app.MapControllers();
     }

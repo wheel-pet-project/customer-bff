@@ -9,21 +9,21 @@ public class VehicleFleetClientWrapper(Proto.VehicleFleetV1.VehicleFleet.Vehicle
         GetVehiclesInSquareReq request,
         CancellationToken ct = default)
     {
-        return await client.GetVehiclesInSquareAsync(request, new CallOptions(cancellationToken: ct));
+        return await client.GetVehiclesInSquareAsync(request, new CallOptions([], cancellationToken: ct));
     }
 
     public async Task<GetVehicleByIdRes> GetVehicleById(GetVehicleByIdReq request, CancellationToken ct = default)
     {
-        return await client.GetVehicleByIdAsync(request, new CallOptions(cancellationToken: ct));
+        return await client.GetVehicleByIdAsync(request, new CallOptions([], cancellationToken: ct));
     }
 
     public async Task<GetAllModelsRes> GetAllModels(GetAllModelsReq request, CancellationToken ct = default)
     {
-        return await client.GetAllModelsAsync(request, new CallOptions(cancellationToken: ct));
+        return await client.GetAllModelsAsync(request, new CallOptions([], cancellationToken: ct));
     }
 
     public async Task<GetModelByIdRes> GetModelById(GetModelByIdReq request, CancellationToken ct = default)
     {
-        return await client.GetModelByIdAsync(request, new CallOptions(cancellationToken: ct));
+        return await client.GetModelByIdAsync(request, new CallOptions([], cancellationToken: ct));
     }
 }

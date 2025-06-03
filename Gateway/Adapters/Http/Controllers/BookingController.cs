@@ -1,19 +1,42 @@
+using Api;
+using Clients.Clients.Booking;
+using Gateway.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OpenApiContractV1.Controllers;
-using OpenApiContractV1.Models;
+using Proto.IdentityV1;
+using BookVehicleRequest = OpenApiContractV1.Models.BookVehicleRequest;
+using BookVehicleResponse = OpenApiContractV1.Models.BookVehicleResponse;
 
 namespace Gateway.Adapters.Http.Controllers;
 
-
-public class BookingController : BookingApiController
+[Authorization(Role.CustomerUnspecified)]
+public class BookingController(BookingClientWrapper clientWrapper) : BookingApiController
 {
-    public override Task<IActionResult> BookVehicle(BookVehicleRequest bookVehicleRequest)
+    public override async Task<IActionResult> BookVehicle(BookVehicleRequest request)
     {
-        throw new NotImplementedException();
+        var serviceResponse = await clientWrapper.BookVehicle(CreateGrpcRequest(request));
+
+        return Ok(MapToResponse(serviceResponse));
+
+        Api.BookVehicleRequest CreateGrpcRequest(BookVehicleRequest r)
+        {
+            return new Api.BookVehicleRequest
+            {
+                CustomerId = HttpContext.User.Claims.FirstOrDefault(x => x.Type == "customer_id")?.Value, 
+                VehicleId = r.VehicleId.ToString()
+            };
+        }
+        
+        BookVehicleResponse MapToResponse(Api.BookVehicleResponse grpcResponse)
+        {
+            return new BookVehicleResponse { BookingId = Guid.Parse((ReadOnlySpan<char>)grpcResponse.BookingId) };
+        }
     }
 
-    public override Task<IActionResult> CancelBookingVehicle(Guid bookingId)
+    public override async Task<IActionResult> CancelBookingVehicle(Guid bookingId)
     {
-        throw new NotImplementedException();
+        await clientWrapper.CancelBooking(new CancelBookingRequest { BookingId = bookingId.ToString() });
+
+        return Ok();
     }
 }

@@ -12,7 +12,6 @@ public class CorrelationInterceptor : Interceptor
     {
         var (key, token) = GenerateCorrelationToken();
         context.Options.Headers?.Add(key, token);
-        // todo: проверить не null ли Headers если не создавать новый экземпляр Metadata?
         
         return continuation(request, context);
     }
